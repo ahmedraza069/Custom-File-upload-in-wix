@@ -1,0 +1,891 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quote Request</title>
+    <!-- Include FontAwesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-green: #057E33;
+            --bg-color: #fafafa;
+            --text-dark: #1a1a1a;
+            --text-muted: #666;
+            --border-color: #e5e5e5;
+            --card-hover: #f0fdf4;
+            --radius: 7px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
+        body {
+            background-color: transparent;
+            color: var(--text-dark);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1007px;
+            margin: 0 auto;
+            padding: 20px 0;
+        }
+
+        /* Progress Steps */
+        .steps-nav {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .step-indicator {
+            flex: 1;
+            padding: 15px;
+            background: #fff;
+            border: 1px solid var(--border-color);
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-radius: var(--radius);
+        }
+
+        .step-indicator.active {
+            border-bottom: 3px solid var(--primary-green);
+            color: var(--text-dark);
+        }
+
+        .step-indicator.completed .step-num {
+            background: var(--primary-green);
+            color: #fff;
+            border-color: var(--primary-green);
+        }
+
+        .step-num {
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            border: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+        }
+
+        /* Form Container */
+        .form-container {
+            background: #fff;
+            border: 1px solid var(--border-color);
+            padding: 50px;
+            border-radius: var(--radius);
+        }
+
+        .step-content { display: none; }
+        .step-content.active {
+            display: block;
+            animation: fadeIn 0.4s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .step-header { margin-bottom: 35px; }
+        .step-subtitle {
+            font-size: 12px;
+            letter-spacing: 1px;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+            display: block;
+        }
+        h2 { font-size: 28px; font-weight: 500; color: var(--text-dark); }
+
+        /* Grids */
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 30px; }
+        .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 30px; }
+        .grid-1 { display: grid; grid-template-columns: 1fr; gap: 20px; margin-bottom: 30px; }
+        .grid-5 { display: grid; grid-template-columns: repeat(5, 1fr); gap: 15px; margin-bottom: 30px; }
+
+        /* Select Cards */
+        .select-card { position: relative; }
+        .select-card input { position: absolute; opacity: 0; cursor: pointer; }
+        
+        .hardware-card .card-body {
+            padding: 25px 15px;
+            height: 100px;
+        }
+        .hardware-icon {
+            font-size: 24px;
+            margin-bottom: 10px;
+            color: var(--text-muted);
+            transition: color 0.2s ease;
+        }
+        
+        .radio-indicator {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            border: 1px solid #ccc;
+            background: #fff;
+            transition: all 0.2s ease;
+        }
+
+        .card-body {
+            border: 1px solid var(--border-color);
+            padding: 25px 20px;
+            height: 100%;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: #fff;
+            border-radius: var(--radius);
+        }
+        
+        .grid-1 .card-body { align-items: flex-start; }
+        
+        .card-title { font-weight: 600; font-size: 13px; margin-bottom: 0; color: var(--text-dark); text-align: center; }
+        .grid-1 .card-title { font-size: 14px; margin-bottom: 6px; text-align: left; }
+        .card-desc { font-size: 13px; color: var(--text-muted); }
+
+        .hardware-card input:checked ~ .card-body {
+            border-color: var(--primary-green);
+            background-color: var(--card-hover);
+        }
+        .hardware-card input:checked ~ .card-body .hardware-icon {
+            color: var(--primary-green);
+        }
+        .hardware-card input:checked ~ .card-body .radio-indicator {
+            background-color: var(--primary-green);
+            border-color: var(--primary-green);
+        }
+        .hardware-card input:checked ~ .card-body .radio-indicator::after {
+            content: '';
+            position: absolute;
+            top: 4px;
+            left: 7px;
+            width: 3px;
+            height: 7px;
+            border: solid white;
+            border-width: 0 2px 2px 0;
+            transform: rotate(45deg);
+        }
+        
+        .qty-card .card-body {
+            padding: 15px 10px;
+            height: 50px;
+            font-family: monospace;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        .qty-card input:checked ~ .card-body {
+            background-color: #0a192f;
+            color: #fff;
+            border-color: #0a192f;
+        }
+        .qty-card input:checked ~ .card-body .card-title {
+            color: #fff;
+        }
+
+        .select-card:not(.qty-card):not(.hardware-card) input:checked ~ .card-body {
+            border-color: var(--primary-green);
+            background-color: var(--card-hover);
+        }
+
+        /* Inputs */
+        .form-group { margin-bottom: 25px; }
+        label.input-label { display: block; font-size: 13px; font-weight: 600; color: var(--text-muted); margin-bottom: 10px; letter-spacing: 1px;}
+        input[type="text"], input[type="email"], select, textarea, input[type="file"] {
+            width: 100%;
+            padding: 14px 18px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            font-size: 15px;
+            outline: none;
+            transition: 0.3s;
+        }
+        input:focus, select:focus, textarea:focus { border-color: var(--primary-green); }
+        textarea { resize: vertical; min-height: 120px; }
+
+        .file-hint { font-size: 12px; color: var(--text-muted); margin-top: 6px; display: block; }
+
+        .error-border { border: 2px solid #ef4444 !important; }
+        .error-message { color: #ef4444; font-size: 13px; margin-top: 5px; display: none; }
+
+        /* Honeypot (spam trap) - hidden from real users */
+        .hp-field { position: absolute !important; left: -9999px !important; width: 1px; height: 1px; overflow: hidden; opacity: 0; }
+
+        /* Buttons */
+        .form-actions {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 40px;
+            padding-top: 30px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .btn {
+            padding: 14px 30px;
+            font-size: 15px;
+            font-weight: 500;
+            cursor: pointer;
+            border: none;
+            border-radius: var(--radius);
+            transition: 0.3s;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .btn-primary { background: var(--primary-green); color: #fff; }
+        .btn-primary:hover { opacity: 0.9; }
+        .btn-outline { background: #fff; border: 1px solid var(--border-color); color: var(--text-dark); }
+        .btn-outline:hover { background: var(--bg-color); }
+        
+        .thank-you-btns {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        @media (max-width: 768px) {
+            .container { padding: 10px; }
+            .form-container { padding: 25px 15px; }
+            .steps-nav { display: none; }
+            h2 { font-size: 18px; margin-bottom: 5px; line-height: 1.3; }
+            .step-header { margin-bottom: 25px; }
+            .step-subtitle { font-size: 11px; margin-bottom: 8px; }
+            .grid-4 { grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px;}
+            .grid-2 { grid-template-columns: 1fr; gap: 12px; margin-bottom: 20px; }
+            .grid-5 { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+            .grid-5 > label:last-child { grid-column: span 2; }
+            .form-actions { flex-direction: column-reverse; gap: 15px; margin-top: 30px; padding-top: 25px; }
+            .form-actions .btn { width: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="steps-nav">
+        <div class="step-indicator active" id="nav-step-1"><span class="step-num">01</span> Hardware</div>
+        <div class="step-indicator" id="nav-step-2"><span class="step-num">02</span> Logistics</div>
+        <div class="step-indicator" id="nav-step-3"><span class="step-num">03</span> Condition</div>
+        <div class="step-indicator" id="nav-step-4"><span class="step-num">04</span> Contact</div>
+    </div>
+
+    <div class="form-container" id="main-form">
+        <!-- STEP 1 -->
+        <div class="step-content active" id="step-1">
+            <div class="step-header">
+                <span class="step-subtitle">Step 1 · Your Hardware</span>
+                <h2>Select the types of hardware you're looking to sell or recycle.</h2>
+            </div>
+
+            <label class="input-label">Are you a...</label>
+            <div class="grid-2" id="customer_type_group">
+                <label class="select-card">
+                    <input type="radio" name="customer_type" value="Corporate ITAD / Business">
+                    <div class="card-body"><div class="card-title">Business / IT team</div></div>
+                </label>
+                <label class="select-card">
+                    <input type="radio" name="customer_type" value="Individual / Home User">
+                    <div class="card-body"><div class="card-title">Individual / Home user</div></div>
+                </label>
+            </div>
+            <div class="error-message" id="err-customer">Please select a customer type.</div>
+
+            <label class="input-label" style="margin-top: 30px;">Types of Hardware — check everything that applies</label>
+            <div class="grid-4" id="hardware_group">
+                <label class="select-card hardware-card">
+                    <input type="checkbox" name="hardware[]" value="Servers">
+                    <div class="card-body">
+                        <div class="radio-indicator"></div>
+                        <i class="fa-solid fa-server hardware-icon"></i>
+                        <div class="card-title">Servers</div>
+                    </div>
+                </label>
+                <label class="select-card hardware-card">
+                    <input type="checkbox" name="hardware[]" value="Laptops">
+                    <div class="card-body">
+                        <div class="radio-indicator"></div>
+                        <i class="fa-solid fa-laptop hardware-icon"></i>
+                        <div class="card-title">Laptops</div>
+                    </div>
+                </label>
+                <label class="select-card hardware-card">
+                    <input type="checkbox" name="hardware[]" value="SSDs">
+                    <div class="card-body">
+                        <div class="radio-indicator"></div>
+                        <i class="fa-solid fa-hard-drive hardware-icon"></i>
+                        <div class="card-title">SSDs</div>
+                    </div>
+                </label>
+                <label class="select-card hardware-card">
+                    <input type="checkbox" name="hardware[]" value="Hard Drives">
+                    <div class="card-body">
+                        <div class="radio-indicator"></div>
+                        <i class="fa-solid fa-hdd hardware-icon"></i>
+                        <div class="card-title">Hard drives</div>
+                    </div>
+                </label>
+                <label class="select-card hardware-card">
+                    <input type="checkbox" name="hardware[]" value="RAM">
+                    <div class="card-body">
+                        <div class="radio-indicator"></div>
+                        <i class="fa-solid fa-memory hardware-icon"></i>
+                        <div class="card-title">RAM</div>
+                    </div>
+                </label>
+                <label class="select-card hardware-card">
+                    <input type="checkbox" name="hardware[]" value="CPUs">
+                    <div class="card-body">
+                        <div class="radio-indicator"></div>
+                        <i class="fa-solid fa-microchip hardware-icon"></i>
+                        <div class="card-title">CPUs</div>
+                    </div>
+                </label>
+                <label class="select-card hardware-card">
+                    <input type="checkbox" name="hardware[]" value="Networking">
+                    <div class="card-body">
+                        <div class="radio-indicator"></div>
+                        <i class="fa-solid fa-network-wired hardware-icon"></i>
+                        <div class="card-title">Switches / networking</div>
+                    </div>
+                </label>
+                <label class="select-card hardware-card">
+                    <input type="checkbox" name="hardware[]" value="Motherboards">
+                    <div class="card-body">
+                        <div class="radio-indicator"></div>
+                        <i class="fa-solid fa-chess-board hardware-icon"></i>
+                        <div class="card-title">Motherboards</div>
+                    </div>
+                </label>
+                <label class="select-card hardware-card">
+                    <input type="checkbox" name="hardware[]" value="GPUs">
+                    <div class="card-body">
+                        <div class="radio-indicator"></div>
+                        <i class="fa-solid fa-sim-card hardware-icon"></i>
+                        <div class="card-title">GPUs / accelerators</div>
+                    </div>
+                </label>
+            </div>
+            <div class="error-message" id="err-hardware">Please select at least one hardware type.</div>
+
+            <label class="input-label" style="margin-top: 30px;">Approximate Quantity</label>
+            <div class="grid-5" id="quantity_group">
+                <label class="select-card qty-card"><input type="radio" name="quantity" value="1-10"><div class="card-body"><div class="card-title">1-10 units</div></div></label>
+                <label class="select-card qty-card"><input type="radio" name="quantity" value="10-50"><div class="card-body"><div class="card-title">10-50 units</div></div></label>
+                <label class="select-card qty-card"><input type="radio" name="quantity" value="50-200"><div class="card-body"><div class="card-title">50-200 units</div></div></label>
+                <label class="select-card qty-card"><input type="radio" name="quantity" value="200-1000"><div class="card-body"><div class="card-title">200-1000 units</div></div></label>
+                <label class="select-card qty-card"><input type="radio" name="quantity" value="1000+"><div class="card-body"><div class="card-title">1000+ units</div></div></label>
+            </div>
+            <div class="error-message" id="err-quantity">Please select an approximate quantity.</div>
+
+            <div class="form-actions" style="justify-content: flex-end;">
+                <button type="button" class="btn btn-primary" onclick="validateAndNext(1, 2)">Continue &rarr;</button>
+            </div>
+        </div>
+
+        <!-- STEP 2 -->
+        <div class="step-content" id="step-2">
+            <div class="step-header">
+                <span class="step-subtitle">Step 2 · Logistics</span>
+                <h2>How would you like us to pick it up?</h2>
+            </div>
+
+            <label class="input-label">Collection Method</label>
+            <div class="grid-1" id="method_group">
+                <label class="select-card">
+                    <input type="radio" name="collection_method" value="Local Pickup">
+                    <div class="card-body" style="text-align: left;">
+                        <div class="card-title">Schedule a local pickup</div>
+                        <div class="card-desc">Serving the Colorado Front Range — pickup is free on qualifying orders.</div>
+                    </div>
+                </label>
+                <label class="select-card">
+                    <input type="radio" name="collection_method" value="Insured Freight">
+                    <div class="card-body" style="text-align: left;">
+                        <div class="card-title">Arrange insured freight</div>
+                        <div class="card-desc">We ship anywhere in the continental U.S. and provide packaging and shipping labels.</div>
+                    </div>
+                </label>
+            </div>
+            <div class="error-message" id="err-method">Please select a collection method.</div>
+
+            <div class="grid-2">
+                <div class="form-group">
+                    <label class="input-label">Zip Code (Origin)</label>
+                    <input type="text" id="zipcode" placeholder="e.g. 80229">
+                    <div class="error-message" id="err-zip">Please enter your zip code.</div>
+                </div>
+                <div class="form-group">
+                    <label class="input-label">Timeline</label>
+                    <select id="timeline">
+                        <option value="" disabled selected>Select timeline</option>
+                        <option value="Within 30 days">Within 30 days</option>
+                        <option value="Immediately">Immediately</option>
+                        <option value="Just getting pricing">Just getting pricing</option>
+                    </select>
+                    <div class="error-message" id="err-timeline">Please select a timeline.</div>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button type="button" class="btn btn-outline" onclick="prevStep(1)">&larr; Back</button>
+                <button type="button" class="btn btn-primary" onclick="validateAndNext(2, 3)">Continue &rarr;</button>
+            </div>
+        </div>
+
+        <!-- STEP 3 -->
+        <div class="step-content" id="step-3">
+            <div class="step-header">
+                <span class="step-subtitle">Step 3 · Condition</span>
+                <h2>What condition is your equipment in overall?</h2>
+            </div>
+
+            <label class="input-label">Overall Condition</label>
+            <div class="grid-1" id="condition_group">
+                <label class="select-card">
+                    <input type="radio" name="condition" value="Working / Tested">
+                    <div class="card-body" style="text-align: left;">
+                        <div class="card-title">Working / tested</div>
+                        <div class="card-desc">It was powered on and working when taken out of service.</div>
+                    </div>
+                </label>
+                <label class="select-card">
+                    <input type="radio" name="condition" value="Untested">
+                    <div class="card-body" style="text-align: left;">
+                        <div class="card-title">Untested / removed as-is</div>
+                        <div class="card-desc">No problem — we test everything on arrival, so there's no downside to being upfront.</div>
+                    </div>
+                </label>
+                <label class="select-card">
+                    <input type="radio" name="condition" value="Damaged">
+                    <div class="card-body" style="text-align: left;">
+                        <div class="card-title">Damaged or end-of-life</div>
+                        <div class="card-desc">Still eligible for responsible recycling, with possible residual value.</div>
+                    </div>
+                </label>
+                <label class="select-card">
+                    <input type="radio" name="condition" value="Mixed">
+                    <div class="card-body" style="text-align: left;">
+                        <div class="card-title">A mix</div>
+                        <div class="card-desc">That's common — we'll sort it all out once it arrives.</div>
+                    </div>
+                </label>
+            </div>
+            <div class="error-message" id="err-condition">Please select the overall condition.</div>
+
+            <div class="form-actions">
+                <button type="button" class="btn btn-outline" onclick="prevStep(2)">&larr; Back</button>
+                <button type="button" class="btn btn-primary" onclick="validateAndNext(3, 4)">Continue &rarr;</button>
+            </div>
+        </div>
+
+        <!-- STEP 4 -->
+        <div class="step-content" id="step-4">
+            <div class="step-header">
+                <span class="step-subtitle">Step 4 · Contact</span>
+                <h2>Who should receive the quote?</h2>
+            </div>
+
+            <!-- Honeypot: real users never see or fill this -->
+            <div class="hp-field" aria-hidden="true">
+                <label for="hp_website">Website</label>
+                <input type="text" id="hp_website" name="website" tabindex="-1" autocomplete="off">
+            </div>
+
+            <div class="grid-2">
+                <div class="form-group">
+                    <label class="input-label">Full Name *</label>
+                    <input type="text" id="fullname" placeholder="John Doe">
+                    <div class="error-message" id="err-name">Full name is required.</div>
+                </div>
+                <div class="form-group">
+                    <label class="input-label">Company (Optional)</label>
+                    <input type="text" id="company" placeholder="John IT (Optional)">
+                </div>
+            </div>
+            
+            <div class="grid-2">
+                <div class="form-group">
+                    <label class="input-label">Email *</label>
+                    <input type="email" id="email" placeholder="john@john.com">
+                    <div class="error-message" id="err-email">Valid email is required.</div>
+                </div>
+                <div class="form-group">
+                    <label class="input-label">Phone (Optional)</label>
+                    <input type="text" id="phone" placeholder="(777) 777-7777">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="input-label">Inventory Attachments (Optional)</label>
+                <input type="file" id="inventory_files" multiple accept=".xlsx,.csv,.pdf,.doc,.docx,.jpg,.jpeg,.png">
+                <span class="file-hint">Attach up to 5 files, 15 MB total: XLSX, CSV, PDF, Word documents, or JPG/PNG photos.</span>
+                <div class="error-message" id="err-files"></div>
+            </div>
+
+            <div class="form-group">
+                <label class="input-label">Anything else we should know? (Optional)</label>
+                <textarea id="notes" placeholder="Model numbers, condition, extra notes, or selected items from payout index..."></textarea>
+            </div>
+
+            <div class="form-actions">
+                <button type="button" class="btn btn-outline" onclick="prevStep(3)">&larr; Back</button>
+                <button type="button" class="btn btn-primary" id="submitBtn" onclick="submitFormToWix()">Submit Request &rarr;</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const MAX_FILES = 5;
+    const MAX_TOTAL_BYTES = 15 * 1024 * 1024;   // keep in sync with backend/fileUpload.jsw (15 MB)
+    const ALLOWED_EXT = ['xlsx', 'csv', 'pdf', 'doc', 'docx', 'jpg', 'jpeg', 'png'];
+    const MIME = {
+        xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        csv: "text/csv",
+        pdf: "application/pdf",
+        doc: "application/msword",
+        docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        jpg: "image/jpeg",
+        jpeg: "image/jpeg",
+        png: "image/png"
+    };
+    const pageLoadedAt = Date.now();
+    let pendingUrlRequest = null; // { resolve, reject, timer }
+
+    function resetErrors(step) {
+        if(step === 1) {
+            document.getElementById('err-customer').style.display = 'none';
+            document.getElementById('err-hardware').style.display = 'none';
+            document.getElementById('err-quantity').style.display = 'none';
+        } else if(step === 2) {
+            document.getElementById('err-method').style.display = 'none';
+            document.getElementById('err-zip').style.display = 'none';
+            document.getElementById('err-timeline').style.display = 'none';
+            document.getElementById('zipcode').classList.remove('error-border');
+            document.getElementById('timeline').classList.remove('error-border');
+        } else if(step === 3) {
+            document.getElementById('err-condition').style.display = 'none';
+        } else if(step === 4) {
+            document.getElementById('err-name').style.display = 'none';
+            document.getElementById('err-email').style.display = 'none';
+            document.getElementById('fullname').classList.remove('error-border');
+            document.getElementById('email').classList.remove('error-border');
+        }
+    }
+
+    function validateAndNext(currentStep, nextStepNum) {
+        resetErrors(currentStep);
+        let isValid = true;
+
+        if(currentStep === 1) {
+            if(!document.querySelector('input[name="customer_type"]:checked')) {
+                document.getElementById('err-customer').style.display = 'block';
+                isValid = false;
+            }
+            if(!document.querySelector('input[name="hardware[]"]:checked')) {
+                document.getElementById('err-hardware').style.display = 'block';
+                isValid = false;
+            }
+            if(!document.querySelector('input[name="quantity"]:checked')) {
+                document.getElementById('err-quantity').style.display = 'block';
+                isValid = false;
+            }
+        } 
+        else if(currentStep === 2) {
+            if(!document.querySelector('input[name="collection_method"]:checked')) {
+                document.getElementById('err-method').style.display = 'block';
+                isValid = false;
+            }
+            if(!document.getElementById('zipcode').value.trim()) {
+                document.getElementById('err-zip').style.display = 'block';
+                document.getElementById('zipcode').classList.add('error-border');
+                isValid = false;
+            }
+            if(!document.getElementById('timeline').value) {
+                document.getElementById('err-timeline').style.display = 'block';
+                document.getElementById('timeline').classList.add('error-border');
+                isValid = false;
+            }
+        }
+        else if(currentStep === 3) {
+            if(!document.querySelector('input[name="condition"]:checked')) {
+                document.getElementById('err-condition').style.display = 'block';
+                isValid = false;
+            }
+        }
+
+        if(isValid) {
+            nextStep(nextStepNum);
+        }
+    }
+
+    function checkFiles() {
+        const errBox = document.getElementById('err-files');
+        const input = document.getElementById('inventory_files');
+        errBox.style.display = 'none';
+        input.classList.remove('error-border');
+        const files = Array.from(input.files);
+        let msg = '';
+
+        if (files.length > MAX_FILES) {
+            msg = 'You can attach up to ' + MAX_FILES + ' files.';
+        } else {
+            let total = 0;
+            for (const f of files) {
+                total += f.size;
+                const ext = f.name.split('.').pop().toLowerCase();
+                if (!ALLOWED_EXT.includes(ext)) { msg = '"' + f.name + '" is not an allowed file type.'; break; }
+            }
+            if (!msg && total > MAX_TOTAL_BYTES) {
+                msg = 'Files are too large (' + (total / 1048576).toFixed(1) + ' MB). Maximum total is ' + (MAX_TOTAL_BYTES / 1048576) + ' MB.';
+            }
+        }
+        if (msg) {
+            errBox.textContent = msg;
+            errBox.style.display = 'block';
+            input.classList.add('error-border');
+            return false;
+        }
+        return true;
+    }
+    document.getElementById('inventory_files').addEventListener('change', checkFiles);
+
+    function validateStep4() {
+        resetErrors(4);
+        let isValid = true;
+        let emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+        if(!document.getElementById('fullname').value.trim()) {
+            document.getElementById('err-name').style.display = 'block';
+            document.getElementById('fullname').classList.add('error-border');
+            isValid = false;
+        }
+        
+        let emailVal = document.getElementById('email').value.trim();
+        if(!emailVal || !emailRegex.test(emailVal)) {
+            document.getElementById('err-email').style.display = 'block';
+            document.getElementById('email').classList.add('error-border');
+            isValid = false;
+        }
+
+        if(!checkFiles()) isValid = false;
+
+        return isValid;
+    }
+
+    function updateNav(step) {
+        document.querySelectorAll('.step-indicator').forEach((indicator, index) => {
+            indicator.classList.remove('active');
+            if (index < step - 1) indicator.classList.add('completed');
+            else indicator.classList.remove('completed');
+        });
+        document.getElementById('nav-step-' + step).classList.add('active');
+    }
+
+    function nextStep(step) {
+        document.querySelectorAll('.step-content').forEach(el => el.classList.remove('active'));
+        document.getElementById('step-' + step).classList.add('active');
+        updateNav(step);
+        document.getElementById('main-form').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    function prevStep(step) {
+        document.querySelectorAll('.step-content').forEach(el => el.classList.remove('active'));
+        document.getElementById('step-' + step).classList.add('active');
+        updateNav(step);
+    }
+
+    function resetSubmitBtn() {
+        let btn = document.getElementById('submitBtn');
+        btn.innerHTML = "Submit Request &rarr;";
+        btn.disabled = false;
+        btn.style.opacity = "1";
+    }
+
+    function settleUrlRequest(err, urls) {
+        if (!pendingUrlRequest) return false;
+        const p = pendingUrlRequest;
+        pendingUrlRequest = null;
+        clearTimeout(p.timer);
+        if (err) p.reject(err); else p.resolve(urls);
+        return true;
+    }
+
+    window.addEventListener('message', function(event) {
+        const d = event.data;
+
+        if (d && d.type === "prefill_quote") {
+            if (d.itemsText) {
+                let notesField = document.getElementById('notes');
+                notesField.value = "Selected Items from Payout Index:\n" + d.itemsText + "\n\n" + notesField.value;
+            }
+        } else if (d && d.type === "uploadUrlsResponse") {
+            settleUrlRequest(null, d.urls || []);
+        } else if (d === "form_success") {
+            document.getElementById('main-form').innerHTML = `
+                <div style="text-align:center; padding: 40px 10px;">
+                    <style>
+                        .ty-heading { color: var(--primary-green); margin-bottom: 15px; font-size: 32px; font-weight: 500;}
+                        .ty-text { font-size: 16px; color: var(--text-muted); margin-bottom: 35px; line-height: 1.5;}
+                        @media (max-width: 768px) {
+                            .ty-heading { font-size: 24px; }
+                            .ty-text { font-size: 14px; }
+                        }
+                    </style>
+                    <i class="fa-solid fa-circle-check" style="font-size: 50px; color: var(--primary-green); margin-bottom: 20px;"></i>
+                    <h2 class="ty-heading">Thank You!</h2>
+                    <p class="ty-text">We've received your request. Our team will review the details and follow up shortly with a quote.</p>
+                    <div class="thank-you-btns">
+                        <a href="https://www.sellssd.net/contact" target="_parent" class="btn btn-primary" style="margin-right: 15px;">Return Home</a>
+                        <a href="https://www.sellssd.net/contact" target="_parent" class="btn btn-outline">Contact Us</a>
+                    </div>
+                </div>
+            `;
+            document.querySelector('.steps-nav').style.display = 'none';
+            document.getElementById('main-form').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        } else if (d === "form_error" || (d && d.type === "form_error")) {
+            const detail = (d && d.error) ? d.error : "";
+            // Upload URL request cholle error ta submitFormToWix er catch handle korbe
+            if (settleUrlRequest(new Error(detail || "Could not prepare file upload."))) return;
+            alert("Something went wrong. Please try again." + (detail ? "\n\n" + detail : ""));
+            resetSubmitBtn();
+        }
+    });
+
+    // Velo theke direct upload URL chay
+    function requestUploadUrls(fileInfos) {
+        return new Promise((resolve, reject) => {
+            const timer = setTimeout(() => {
+                pendingUrlRequest = null;
+                reject(new Error('Could not prepare upload (timed out). Please try again.'));
+            }, 30000);
+            pendingUrlRequest = { resolve, reject, timer };
+            window.parent.postMessage({ type: "requestUploadUrls", fileInfos: fileInfos }, "*");
+        });
+    }
+
+    // Upload response theke proper Wix media URL toiri kore.
+    // Wix response e file_url ashe relative path hishebe ("ugd/xxx.pdf" ba "media/xxx.png"),
+    // tai oitake wix:document:// / wix:image:// URL e convert korte hoy.
+    function buildWixUrl(item) {
+        const origName = encodeURIComponent(item.original_file_name || item.file_name || "file");
+        const fileUrl = String(item.file_url || item.fileUrl || "");
+        const isImage = item.media_type === 'picture' || (item.mime_type || '').indexOf('image/') === 0;
+
+        if (isImage) {
+            const imgPath = (item.file_name || fileUrl.replace(/^media\//, ""));
+            return 'wix:image://v1/' + imgPath + '/' + origName +
+                '#originWidth=' + (item.width || 0) + '&originHeight=' + (item.height || 0);
+        }
+
+        const docPath = fileUrl.indexOf('ugd/') === 0 ? fileUrl : 'ugd/' + (item.file_name || fileUrl);
+        return 'wix:document://v1/' + docPath + '/' + origName;
+    }
+
+    // Browser theke sorasori Wix e file upload
+    async function uploadOneFile(file, urlInfo, index) {
+        const ext = file.name.split('.').pop().toLowerCase();
+        const safeName = Date.now() + "_" + index + "_" + file.name.replace(/[^\w.\-]/g, "_");
+        const contentType = urlInfo.mimeType || MIME[ext] || file.type;
+
+        // contentType backend er mimeType er sathe match korano hocche
+        const typedFile = new File([file], safeName, { type: contentType });
+
+        const form = new FormData();
+        form.append("file", typedFile, safeName);
+
+        const res = await fetch(urlInfo.uploadUrl, { method: "POST", body: form });
+        if (!res.ok) throw new Error('Upload failed for "' + file.name + '" (' + res.status + ')');
+
+        const json = await res.json();
+        const item = Array.isArray(json) ? json[0] : json;
+        if (!item) throw new Error('Upload response invalid for "' + file.name + '"');
+
+        const wixUrl = buildWixUrl(item);
+        console.log("Upload OK:", file.name, "->", wixUrl);
+
+        return { name: file.name, wixUrl: wixUrl };
+    }
+
+    async function submitFormToWix() {
+        if(!validateStep4()) {
+            return;
+        }
+
+        let hardwareList = [];
+        document.querySelectorAll('input[name="hardware[]"]:checked').forEach(el => hardwareList.push(el.value));
+
+        let btn = document.getElementById('submitBtn');
+        btn.innerHTML = "Submitting...";
+        btn.disabled = true;
+        btn.style.opacity = "0.7";
+
+        const files = Array.from(document.getElementById('inventory_files').files);
+        let uploadedFiles = [];
+
+        try {
+            if (files.length > 0) {
+                btn.innerHTML = "Preparing upload...";
+                const fileInfos = files.map(f => {
+                    const ext = f.name.split('.').pop().toLowerCase();
+                    return { name: f.name, type: f.type || MIME[ext] || "application/octet-stream", size: f.size };
+                });
+
+                const urls = await requestUploadUrls(fileInfos);
+
+                for (let i = 0; i < files.length; i++) {
+                    const u = urls[i];
+                    if (!u || !u.uploadUrl) throw new Error('Could not get upload link for "' + files[i].name + '"');
+                    btn.innerHTML = "Uploading file " + (i + 1) + "/" + files.length + "...";
+                    uploadedFiles.push(await uploadOneFile(files[i], u, i));
+                }
+            }
+        } catch (err) {
+            alert("File upload failed: " + (err && err.message ? err.message : err));
+            resetSubmitBtn();
+            return;
+        }
+
+        btn.innerHTML = "Submitting...";
+
+        let payload = {
+            type: "submitQuoteData",
+            hp: document.getElementById('hp_website').value,
+            elapsedMs: Date.now() - pageLoadedAt,
+            customerType: document.querySelector('input[name="customer_type"]:checked').value,
+            hardwareTypes: hardwareList,
+            quantity: document.querySelector('input[name="quantity"]:checked').value,
+            collectionMethod: document.querySelector('input[name="collection_method"]:checked').value,
+            zipCode: document.getElementById('zipcode').value.trim(),
+            timeline: document.getElementById('timeline').value,
+            condition: document.querySelector('input[name="condition"]:checked').value,
+            fullName: document.getElementById('fullname').value.trim(),
+            company: document.getElementById('company').value.trim() || "",
+            email: document.getElementById('email').value.trim(),
+            phone: document.getElementById('phone').value.trim(),
+            notes: document.getElementById('notes').value.trim(),
+            uploadedFiles: uploadedFiles
+        };
+
+        window.parent.postMessage(payload, "*");
+    }
+</script>
+
+</body>
+</html>
