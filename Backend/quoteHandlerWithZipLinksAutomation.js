@@ -139,7 +139,9 @@ export async function processQuoteSubmission(data) {
             return { success: false, error: "Attachment error: " + errText(e) };
         }
 
-        const notes = clean(data.notes, 5000) + (att.links.length ? "\n\nAttached Files:\n" + att.links.join("\n") : "");
+        // const notes = clean(data.notes, 5000) + (att.links.length ? "\n\nAttached Files:\n" + att.links.join("\n") : "");
+        const notes = clean(data.notes, 5000);  
+        // const notes = clean(data.notes, 5000);
         const zipLink = await makeZipLink(att.fileUrls);
 
         /** @type {any} */
@@ -157,7 +159,7 @@ export async function processQuoteSubmission(data) {
             condition: clean(data.condition, 100),
             notes: notes,
             attachmentNames: att.names.join(", "),
-            attachmentLinks: att.links.join("\n"),
+            // attachmentLinks: att.links.join("\n"),
             attachmentsZipLink: zipLink
         };
 
